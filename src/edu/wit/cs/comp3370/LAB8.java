@@ -11,17 +11,75 @@ import java.util.Scanner;
  * Wentworth Institute of Technology
  * COMP 3370
  * Lab Assignment 8
- * 
+ * Rachel Palmer
  */
 
 public class LAB8 {
 
-	// TODO: document this method
+	/**
+	 * FindDynamic uses two matrices of m by n size. P keeps track of the best value for the 
+	 * current index. bools keeps track of whether or not to include a weight when figuring out
+	 * which indices make up the best value. If the weight of the current Item is less than the
+	 * curr w value (meaning more can fit in the knapsack), then P[i][w] is calculated by finding
+	 * the max of the last value, and value at the w val corresponding to w-w[i] (which represents
+	 * the exact amount of weight that can still fit in the knapsack). otherwise, P[i][w] is equal
+	 * to P at the previous i value. best_value is equal to the final index in P. 
+	 * findItems uses a recursive method to find the exact sequence of items that made up the 
+	 * best value. Starting from the last index, it looks to see whether that index is true.
+	 * If it is, then the Item from table at that index is added to the result array and 
+	 * findItems is called for i-1 and w-wi (which was the last weight value used in 
+	 * calculations. Otherwise, it ignore the value and checks the b value at i-1. Once i or w
+	 * reach 0, this means there are no more items that can be added to the sack, so the result
+	 * array is finalized. 
+	 *
+	 * @param table			table of Items with a weight and value
+	 * @param weight		the max weight allowed in the knapsack
+	 * @return				array of indices of items that make the best value
+	 */
 	public static Item[] FindDynamic(Item[] table, int weight) {
-		// TODO: implement this method
-		return null;
+		int m = table.length+1; //+1 to include all values in table (since theyre accessed by i-1 below)
+		int n = weight+1;
+		int[][] P = new int[m][n];
+		Boolean[][] bools = new Boolean[m][n]; //keeps true/false vals when number at index updates
+		for(int i=0;i<m;i++){
+			P[i][0] = 0;
+		}
+		for(int j=0;j<n;j++){
+			P[0][j] = 0;
+		}
+		for(int i=1;i<m;i++){
+			for(int w=1;w<n;w++){
+				if(table[i-1].weight <= w){
+					P[i][w] = Math.max(P[i-1][w], table[i-1].value + P[i-1][w-table[i-1].weight]);
+					if(P[i-1][w] < P[i][w]) //if the 2nd max arg was the one accepted
+						bools[i][w] = true;
+					else //if prev val was max or equal to (no val update)
+						bools[i][w] = false;
+				}
+				else{
+					P[i][w] = P[i-1][w];
+					bools[i][w] = false;
+				}
+			}
+		}
+		best_value = P[m-1][n-1]; //last index of P
+		ArrayList<Item> result = new ArrayList<Item>(); //ArrayList used so indices arent needed in findItems
+		findItems(table, P, bools, result, m-1, n-1); //start with final index
+		Item[] r = result.toArray(new Item[result.size()]);
+		return r;
+	}
+	
+	public static void findItems(Item[] table, int[][] P, Boolean[][] b, ArrayList<Item> result, int i, int w){
+		if(i==0 || w == 0) //no more items can be added
+			return;
+		if(b[i][w]){
+			result.add(table[i-1]);
+			findItems(table, P, b, result, i-1, w - table[i-1].weight); //go to index of last best value to go into knapsack with current index
+		}
+		else{
+			findItems(table, P, b, result, i-1, w); 
+		}
 		
-		// TODO: set best_value to the sum of the optimal items' values
 	}
 
 	/********************************************
